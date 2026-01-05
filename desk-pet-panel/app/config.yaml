@@ -1,0 +1,30 @@
+display:
+  width: 240
+  height: 320
+  brightness: 80
+  page_cycle_seconds: 10
+  fps_static: 1
+  fps_pet: 8
+
+network:
+  test_host: "1.1.1.1"
+  test_port: 53
+  refresh_seconds: 2
+
+qweather:
+  host: "YOUR_HOST.qweatherapi.com"
+  api_key: "0123456789ABCDEF"
+  lang: "zh"
+  unit: "m"
+  location_text: "Beijing"
+  refresh_seconds: 900
+  timeout_seconds: 2.0
+
+ticker:
+  speed_px_per_s: 40
+
+reminder:
+  fish_times:
+    - "10:30"
+    - "15:30"
+    - "21:00"

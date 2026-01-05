@@ -27,52 +27,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 from drivers.LCD_2inch import LCD_2inch
 
+from ticker_queue import TickerQueue, TickerItem
+from collectors.quotes import fetch_quote
 
-# -----------------------------
-# Config (edit here first)
-# -----------------------------
+from config_loader import load_config
 
-CONFIG = {
-    "display": {
-        "w": 240,
-        "h": 320,
-        "brightness": 80,           # 0..100
-        "page_cycle_seconds": 10,   # auto rotate pages
-        "fps_idle": 8,              # for later pet animation
-        "fps_static": 1,
-    },
-    "qweather": {
-        # IMPORTANT: QWeather host is shown in Console -> Setting -> API Host
-        # Example in docs: abcxyz.qweatherapi.com
-        "host": "YOUR_HOST.qweatherapi.com",
-        # placeholder 16 chars as you requested
-        "api_key": "0123456789ABCDEF",
-        "lang": "zh",
-        "unit": "m",
-        "lookup": {
-            "location_text": "Beijing",  # you can set "清华大学" / "Haidian" later
-            "range": "cn",
-            "number": 1
-        },
-        "refresh_seconds": 900,  # 15 minutes
-        "timeout_seconds": 2.0,
-    },
-    "network": {
-        "connect_test_host": "1.1.1.1",
-        "connect_test_port": 53,
-        "connect_timeout": 0.8,
-        "refresh_seconds": 2,
-    },
-    "paths": {
-        "state_dir": os.path.join(os.path.dirname(__file__), "state"),
-        "weather_cache": "weather_cache.json",
-        "geo_cache": "geo_cache.json",
-    },
-    "ui": {
-        "ticker_height": 34,
-        "ticker_speed_px_per_s": 40,  # scroll speed
-    }
-}
+CONFIG = load_config(os.path.join(os.path.dirname(__file__), "config.yaml"))
+
 
 
 # -----------------------------
