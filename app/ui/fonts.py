@@ -6,7 +6,6 @@ def load_font(size: int) -> ImageFont.ImageFont:
     # Prefer the font shipped in the driver zip (arialbd.ttf)
     base = os.path.dirname(__file__)
     candidates = [
-        os.path.join(base, "arialbd.ttf"),
         os.path.join(os.path.dirname(base), "drivers", "fonts", "arialbd.ttf"),
         os.path.join(base, "assets", "fonts", "arialbd.ttf"),
         os.path.join(os.path.dirname(base), "fonts", "arialbd.ttf"),

@@ -14,16 +14,9 @@ import os
 import signal
 import socket
 import subprocess
-import sys
 import time
 from datetime import datetime
-from pathlib import Path
 from threading import Lock, Thread
-
-# Ensure the project root is on sys.path when running as a script (e.g. `python app/main.py`).
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
 
 from drivers.LCD_2inch import LCD_2inch
 from ticker_queue import TickerItem, TickerQueue
