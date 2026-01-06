@@ -1,22 +1,16 @@
+# app/collectors/quotes.py
+from __future__ import annotations
 import requests
-from datetime import datetime
 
-def fetch_quote():
+def fetch_quote(timeout_s: float = 2.0) -> str | None:
+    """
+    Use a simple public quote endpoint.
+    If unavailable, return None.
+    """
     try:
-        r = requests.get("https://v1.hitokoto.cn/?encode=text", timeout=2)
-        return r.text.strip()
+        r = requests.get("https://v1.hitokoto.cn/?encode=text", timeout=timeout_s)
+        r.raise_for_status()
+        t = r.text.strip()
+        return t if t else None
     except Exception:
         return None
-
-def fish_reminder(fish_times):
-    now = datetime.now().strftime("%H:%M")
-    if now in fish_times:
-        return "摸鱼提醒：起来活动 3 分钟 🐟"
-    return None
-
-def alert_from_snapshot(snap):
-    if not snap.online:
-        return "⚠ 网络断开"
-    if snap.weather.ok and snap.weather.stale:
-        return "⚠ 天气数据过期"
-    return None

@@ -26,14 +26,19 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 
 from drivers.LCD_2inch import LCD_2inch
-
 from ticker_queue import TickerQueue, TickerItem
 from collectors.quotes import fetch_quote
+from ui.sprite import Sprite
+from ui.weather_icons import ICON_MAP
 
 from config_loader import load_config
 
 CONFIG = load_config(os.path.join(os.path.dirname(__file__), "config.yaml"))
 
+pet_normal = None
+pet_alert = None
+pet_normal = Sprite(...)
+pet_alert = Sprite(...)
 
 
 # -----------------------------
@@ -415,7 +420,13 @@ class Ticker:
             draw.text((x, y0 + 6), self.text, font=font, fill=(255, 255, 255))
             x += int(total)
 
-def render_clock_page(snap: Snapshot, ticker: Ticker) -> Image.Image:
+# app/main.py
+def render_clock_page(
+    snap: Snapshot,
+    ticker: Ticker,
+    pet_normal: "Sprite | None",
+    pet_alert: "Sprite | None",
+) -> Image.Image:
     w, h = CONFIG["display"]["w"], CONFIG["display"]["h"]
     img = Image.new("RGB", (w, h), (0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -426,13 +437,15 @@ def render_clock_page(snap: Snapshot, ticker: Ticker) -> Image.Image:
 
     status_bar(draw, snap, font_small)
 
+    # time
     t_str = snap.now.strftime("%H:%M")
     draw.text((10, 40), t_str, font=font_big, fill=(255, 255, 255))
 
+    # date
     d_str = snap.now.strftime("%Y-%m-%d %a")
     draw.text((12, 110), d_str, font=font_mid, fill=(255, 255, 255))
 
-    # quick weather hint on main page
+    # quick weather hint
     if snap.weather.ok:
         wline = f"{snap.weather.location_name} {snap.weather.temp_c}° {snap.weather.text}"
         if snap.weather.stale:
@@ -441,11 +454,17 @@ def render_clock_page(snap: Snapshot, ticker: Ticker) -> Image.Image:
     else:
         draw.text((12, 148), "Weather: -", font=font_mid, fill=(255, 255, 255))
 
-    alert = (not snap.online) or (snap.weather.ok and snap.weather.stale)
-    draw_pet(draw, x=w - 80, y=h - 110, online=snap.online, alert=alert)
+    # ===== desk pet sprite =====
+    alert_mode = (not snap.online) or (snap.weather.ok and snap.weather.stale)
 
-    ticker.draw(img, font_small)
+    sprite = pet_alert if alert_mode else pet_normal
+    if sprite is not None:
+        frame = sprite.frame(time.time())
+        if frame is not None:
+            img.paste(frame, (w - 80, h - 110), frame)
+
     return img
+
 
 def render_weather_page(snap: Snapshot, ticker: Ticker) -> Image.Image:
     w, h = CONFIG["display"]["w"], CONFIG["display"]["h"]
@@ -457,7 +476,16 @@ def render_weather_page(snap: Snapshot, ticker: Ticker) -> Image.Image:
     font_big = load_font(48)
 
     status_bar(draw, snap, font_small)
+    icon_code = snap.weather.icon
+    icon_name = ICON_MAP.get(icon_code, "unknown.png")
+    icon_path = os.path.join(os.path.dirname(__file__), "ui", "assets", "icons", icon_name)
 
+    try:
+        icon = Image.open(icon_path).convert("RGBA")
+        # Put icon on left area
+        img.paste(icon, (10, 90), icon)
+    except Exception:
+        pass
     title = "WEATHER"
     draw.text((10, 36), title, font=font_mid, fill=(255, 255, 255))
 
@@ -552,13 +580,42 @@ def main():
     pages = ["clock", "weather", "status"]
     page_idx = 0
     page_start = time.monotonic()
+    ticker_q = TickerQueue()
 
+    BASE_DIR = os.path.dirname(__file__)
+    pet_normal = Sprite(os.path.join(BASE_DIR, "ui", "assets", "sprites", "normal"), fps=CONFIG["display"]["fps_idle"])
+    pet_alert  = Sprite(os.path.join(BASE_DIR, "ui", "assets", "sprites", "alert"),  fps=CONFIG["display"]["fps_idle"])
+
+    last_quote_ts = 0.0
     ticker = Ticker()
 
     try:
         while not _stop:
             snap = build_snapshot()
+            now_mono = time.monotonic()
 
+            # 1) Quote: fetch at most once per 10 minutes
+            if now_mono - last_quote_ts > 600:
+                last_quote_ts = now_mono
+                q = fetch_quote()
+                if q:
+                    ticker_q.push(TickerItem(q, ttl=600, priority=20))
+
+            # 2) Alerts
+            alert = None
+            if not snap.online:
+                alert = "⚠ 网络离线"
+            elif snap.weather.ok and snap.weather.stale:
+                alert = "⚠ 天气数据过期（stale）"
+
+            if alert:
+                ticker_q.push(TickerItem(alert, ttl=30, priority=1))
+
+            # 3) Apply ticker text (fallback if empty)
+            t = ticker_q.next_text()
+            if not t:
+                t = "TIP: 继续完善 sprites/icons，并接入日历与服务器状态。"
+            ticker.set_text(t)
             # ticker content policy (simple but useful):
             if not snap.online:
                 ticker.set_text("ALERT: network offline. check uplink/AP/DNS.")
