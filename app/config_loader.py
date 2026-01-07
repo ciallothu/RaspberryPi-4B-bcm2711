@@ -6,15 +6,14 @@ from typing import Any, Dict
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "display": {
-        "w": 320,
-        "h": 240,
-        "width": 320,
-        "height": 240,
+        "w": 240,
+        "h": 320,
+        "width": 240,
+        "height": 320,
         "brightness": 80,
         "page_cycle_seconds": 10,
         "fps_idle": 1,
         "fps_pet": 8,
-        "fps_video": 10,
     },
     "network": {
         "connect_test_host": "1.1.1.1",
