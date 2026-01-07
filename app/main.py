@@ -14,16 +14,9 @@ import os
 import signal
 import socket
 import subprocess
-import sys
 import time
 from datetime import datetime
-from pathlib import Path
 from threading import Lock, Thread
-
-# Ensure the project root is on sys.path when running as a script (e.g. `python app/main.py`).
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
 
 from drivers.LCD_2inch import LCD_2inch
 from ticker_queue import TickerItem, TickerQueue
@@ -32,10 +25,9 @@ from config_loader import load_config
 from app.models import Snapshot
 from app.services.quote_service import QuoteService
 from app.services.weather_service import WeatherService
-from app.ui.pages import render_clock_page, render_status_page, render_video_page, render_weather_page
+from app.ui.pages import render_clock_page, render_status_page, render_weather_page
 from app.ui.pet_display import PetRenderer, load_pet_sprites
 from app.ui.ticker_display import Ticker
-from app.ui.video.player import VideoPlayer
 
 CONFIG = load_config(os.path.join(os.path.dirname(__file__), "config.yaml"))
 
@@ -162,14 +154,6 @@ def main():
     base_dir = os.path.join(os.path.dirname(__file__), "ui", "assets", "sprites")
     pet_sprites = load_pet_sprites(base_dir, fps=CONFIG["display"]["fps_idle"])
     pet_renderer = PetRenderer(pet_sprites)
-    video_dir = os.path.join(os.path.dirname(__file__), "ui", "pictures")
-    video_player = VideoPlayer(
-        video_dir,
-        size=(CONFIG["display"]["w"], CONFIG["display"]["h"]),
-        fps=CONFIG["display"].get("fps_video", 10),
-    )
-    if video_player.available:
-        pages.insert(0, "video")
 
     try:
         while not _stop:
@@ -210,14 +194,10 @@ def main():
                 "clock": lambda: render_clock_page(snap, ticker, pet_renderer, CONFIG["display"]),
                 "weather": lambda: render_weather_page(snap, ticker, CONFIG["display"]),
                 "status": lambda: render_status_page(snap, ticker, CONFIG["display"]),
-                "video": lambda: render_video_page(snap, ticker, video_player, CONFIG["display"]),
             }
             frame = frame_renderers[p]()
             lcd.ShowImage(frame)
-            if p == "video" and video_player.available:
-                time.sleep(video_player.frame_interval)
-            else:
-                time.sleep(1.0)
+            time.sleep(1.0)
 
     finally:
         _stop = True

@@ -24,8 +24,7 @@ class VideoPlayer:
         frames: List[str] = []
         for pattern in patterns:
             frames.extend(glob.glob(os.path.join(self.frames_dir, pattern)))
-            frames.extend(glob.glob(os.path.join(self.frames_dir, "**", pattern), recursive=True))
-        self._frames = sorted(set(frames))
+        self._frames = sorted(frames)
 
     @property
     def available(self) -> bool:
