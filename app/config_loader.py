@@ -23,17 +23,24 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "refresh_seconds": 5,
     },
     "qweather": {
-        "host": "YOUR_HOST.qweatherapi.com",
-        "api_key": "0123456789ABCDEF",
+        "host": "nk3h2qgxkp.yun.qweatherapi.com",
+        "api_key": "1583c29221bd4db08df144458b7dc5dd",
         "lang": "zh",
         "unit": "m",
         "timeout_seconds": 2.0,
         "refresh_seconds": 900,
         "lookup": {
             "location_text": "Beijing",
+            "location_id": "101010100",
             "range": "cn",
             "number": 1,
         },
+    },
+    "shwg": {
+        "api_key": "fT7UdsZE1wNi2qGGp747zHJGmN",
+        "quote_type": 5,
+        "quote_refresh_seconds": 900,
+        "lunar_refresh_seconds": 3600,
     },
     "ui": {
         "ticker_height": 24,
@@ -43,6 +50,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "state_dir": os.path.expanduser("~/.cache/deskpet-panel"),
         "geo_cache": "qweather_geo.json",
         "weather_cache": "weather_now.json",
+        "forecast_cache": "weather_7d.json",
     },
 }
 
@@ -123,6 +131,7 @@ def load_config(path: str) -> dict:
     _merge_section(cfg, "network", raw.get("network", {}))
     _merge_section(cfg, "qweather", raw.get("qweather", {}))
     _merge_section(cfg, "ui", raw.get("ui", {}))
+    _merge_section(cfg, "shwg", raw.get("shwg", {}))
     _merge_section(cfg, "paths", raw.get("paths", {}))
 
     # normalize legacy/alias keys

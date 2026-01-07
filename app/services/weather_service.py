@@ -6,7 +6,7 @@ from typing import Optional
 
 import requests
 
-from app.models import WeatherNow
+from app.models import WeatherDaily, WeatherNow, WeatherSnapshot
 
 
 class QWeatherClient:
@@ -47,6 +47,10 @@ class QWeatherClient:
         params = {"location": location_id, "lang": lang, "unit": unit}
         return self._get("/v7/weather/now", params)
 
+    def weather_7d(self, location_id: str, lang: str, unit: str) -> dict:
+        params = {"location": location_id, "lang": lang, "unit": unit}
+        return self._get("/v7/weather/7d", params)
+
 
 def _ensure_dir(path: str) -> str:
     expanded = os.path.expanduser(path)
@@ -81,6 +85,7 @@ class WeatherService:
         self.config = config
         self._lock = Lock()
         self._weather = WeatherNow()
+        self._daily: list[WeatherDaily] = []
         self._stop = Event()
         self._worker: Optional[Thread] = None
 
@@ -96,9 +101,9 @@ class WeatherService:
         if self._worker:
             self._worker.join(timeout=1.0)
 
-    def snapshot(self) -> WeatherNow:
+    def snapshot(self) -> WeatherSnapshot:
         with self._lock:
-            return self._weather
+            return WeatherSnapshot(now=self._weather, daily=list(self._daily))
 
     # internal
     def _worker_loop(self):
@@ -109,9 +114,11 @@ class WeatherService:
 
         geo_cache_p = _state_path(paths["state_dir"], paths["geo_cache"])
         weather_cache_p = _state_path(paths["state_dir"], paths["weather_cache"])
+        forecast_cache_p = _state_path(paths["state_dir"], paths["forecast_cache"])
 
         geo_cache = _load_json(geo_cache_p)
         weather_cache = _load_json(weather_cache_p)
+        forecast_cache = _load_json(forecast_cache_p)
 
         # Initialize from cache if present
         if weather_cache:
@@ -129,12 +136,25 @@ class WeatherService:
                     err="(cache)",
                 )
 
+        if forecast_cache:
+            daily_list = []
+            for item in forecast_cache.get("daily", []):
+                daily_list.append(WeatherDaily(
+                    date=item.get("date", "-"),
+                    text_day=item.get("text_day", "-"),
+                    temp_max=item.get("temp_max", "-"),
+                    temp_min=item.get("temp_min", "-"),
+                    icon_day=item.get("icon_day", "-"),
+                ))
+            with self._lock:
+                self._daily = daily_list
+
         backoff = 5
         while not self._stop.is_set():
             try:
                 # 1) get location_id (cache it)
-                location_id = geo_cache.get("location_id")
-                location_name = geo_cache.get("location_name", qcfg["lookup"]["location_text"])
+                location_id = qcfg["lookup"].get("location_id") or geo_cache.get("location_id")
+                location_name = geo_cache.get("location_name", qcfg["lookup"].get("location_text", "-"))
 
                 if not location_id:
                     geo = client.city_lookup(
@@ -155,6 +175,10 @@ class WeatherService:
                 wnow = client.weather_now(location_id=location_id, lang=qcfg["lang"], unit=qcfg["unit"])
                 if wnow.get("code") != "200":
                     raise RuntimeError(f"Weather now failed: {wnow.get('code')}")
+
+                w7d = client.weather_7d(location_id=location_id, lang=qcfg["lang"], unit=qcfg["unit"])
+                if w7d.get("code") != "200":
+                    raise RuntimeError(f"Weather 7d failed: {w7d.get('code')}")
 
                 now_obj = wnow.get("now", {})
                 upd_time = wnow.get("updateTime", "")
@@ -184,8 +208,34 @@ class WeatherService:
                     "last_ok_ts": new_w.last_ok_ts,
                 })
 
+                daily_list = []
+                for item in w7d.get("daily", []):
+                    daily_list.append(WeatherDaily(
+                        date=str(item.get("fxDate", "-")),
+                        text_day=str(item.get("textDay", "-")),
+                        temp_max=str(item.get("tempMax", "-")),
+                        temp_min=str(item.get("tempMin", "-")),
+                        icon_day=str(item.get("iconDay", "-")),
+                    ))
+
+                _save_json(forecast_cache_p, {
+                    "location_id": location_id,
+                    "location_name": location_name,
+                    "daily": [
+                        {
+                            "date": d.date,
+                            "text_day": d.text_day,
+                            "temp_max": d.temp_max,
+                            "temp_min": d.temp_min,
+                            "icon_day": d.icon_day,
+                        }
+                        for d in daily_list
+                    ],
+                })
+
                 with self._lock:
                     self._weather = new_w
+                    self._daily = daily_list
 
                 backoff = 5
                 self._sleep_or_stop(qcfg["refresh_seconds"])
