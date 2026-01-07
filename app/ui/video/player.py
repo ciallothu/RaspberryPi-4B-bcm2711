@@ -24,7 +24,23 @@ class VideoPlayer:
         frames: List[str] = []
         for pattern in patterns:
             frames.extend(glob.glob(os.path.join(self.frames_dir, pattern)))
-        self._frames = sorted(frames)
+            frames.extend(glob.glob(os.path.join(self.frames_dir, "**", pattern), recursive=True))
+        all_frames = sorted(set(frames))
+        limited: List[str] = []
+        for path in all_frames:
+            name = os.path.basename(path)
+            if not name.lower().startswith("video_"):
+                continue
+            parts = name.split("_", 1)
+            if len(parts) != 2:
+                continue
+            suffix = parts[1].split(".", 1)[0]
+            if not suffix.isdigit():
+                continue
+            idx = int(suffix)
+            if 1 <= idx <= 65:
+                limited.append(path)
+        self._frames = limited
 
     @property
     def available(self) -> bool:

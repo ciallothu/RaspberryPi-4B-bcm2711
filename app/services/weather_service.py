@@ -49,8 +49,9 @@ class QWeatherClient:
 
 
 def _ensure_dir(path: str) -> str:
-    os.makedirs(path, exist_ok=True)
-    return path
+    expanded = os.path.expanduser(path)
+    os.makedirs(expanded, exist_ok=True)
+    return expanded
 
 
 def _state_path(state_dir: str, filename: str) -> str:

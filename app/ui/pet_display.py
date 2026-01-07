@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from PIL import ImageDraw
 
-from ui.sprite import Sprite
+from app.ui.sprite import Sprite
 
 
 @dataclass
