@@ -65,11 +65,4 @@ class VideoPlayer:
         except Exception:
             return None
 
-        if frame.size != self.size:
-            try:
-                resample = Image.Resampling.LANCZOS
-            except AttributeError:
-                resample = Image.LANCZOS
-            frame = frame.resize(self.size, resample=resample)
-
         return frame

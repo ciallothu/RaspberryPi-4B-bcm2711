@@ -152,7 +152,17 @@ def render_video_page(
         font_mid = load_font(20)
         draw.text((10, 10), "No video frames.", font=font_mid, fill=(255, 255, 255))
     else:
-        img = frame
-    font_small = load_font(14)
-    ticker.draw(img, font_small)
+        img = Image.new("RGB", (w, h), (0, 0, 0))
+        fw, fh = frame.size
+        if fw > 0 and fh > 0:
+            scale = min(w / fw, h / fh)
+            target = (max(1, int(fw * scale)), max(1, int(fh * scale)))
+            try:
+                resample = Image.Resampling.LANCZOS
+            except AttributeError:
+                resample = Image.LANCZOS
+            fitted = frame.resize(target, resample=resample)
+            x = (w - target[0]) // 2
+            y = (h - target[1]) // 2
+            img.paste(fitted, (x, y))
     return img
