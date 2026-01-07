@@ -160,9 +160,8 @@ def render_video_page(
             y = (h - target[1]) // 2
             img.paste(fitted, (x, y))
             if target[1] < h:
-                mirrored = ImageOps.flip(fitted)
-                img.paste(mirrored, (x, y - target[1]))
-                img.paste(mirrored, (x, y + target[1]))
+                img.paste(fitted, (x, y - target[1]))
+                img.paste(fitted, (x, y + target[1]))
     return img
 
 
