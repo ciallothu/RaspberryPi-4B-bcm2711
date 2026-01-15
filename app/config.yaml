@@ -17,7 +17,7 @@ network:
 
 qweather:
   host: "nk3h2qgxkp.yun.qweatherapi.com"
-  api_key: "1583c29221bd4db08df144458b7dc5dd"
+  api_key: "4DE2JHR6H3"
   lang: "zh"
   unit: "m"
   timeout_seconds: 2.0

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageOps
 
@@ -6,7 +7,6 @@ from app.models import Snapshot
 from app.ui.fonts import load_font
 from app.ui.ticker_display import Ticker
 from app.ui.video.player import VideoPlayer
-from app.ui.weather.icons import ICON_MAP
 
 
 def status_bar(draw: ImageDraw.ImageDraw, snap: Snapshot, font, display_cfg: dict):
@@ -67,17 +67,6 @@ def render_weather_page(snap: Snapshot, ticker: Ticker, display_cfg: dict) -> Im
     font_big = load_font(48)
 
     status_bar(draw, snap, font_small, display_cfg)
-    icon_code = snap.weather.now.icon
-    icon_name = ICON_MAP.get(icon_code, "unknown.png")
-    ui_root = os.path.dirname(os.path.dirname(__file__))
-    icon_path = os.path.join(ui_root, "assets", "icons", icon_name)
-
-    try:
-        icon = Image.open(icon_path).convert("RGBA")
-        # Put icon on left area
-        img.paste(icon, (10, 90), icon)
-    except Exception:
-        pass
     title = "WEATHER"
     draw.text((10, 36), title, font=font_mid, fill=(255, 255, 255))
 
@@ -211,9 +200,16 @@ def render_weekly_weather_page(snap: Snapshot, ticker: Ticker, display_cfg: dict
     daily = snap.weather.daily[:7]
     start_y = 70
     row_h = 24
+    weekday_map = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
     for idx, day in enumerate(daily):
         y = start_y + idx * row_h
         date_label = day.date[5:] if len(day.date) >= 5 else day.date
+        try:
+            dt = datetime.strptime(day.date, "%Y-%m-%d")
+            weekday = weekday_map[dt.weekday()]
+            date_label = f"{weekday} {date_label}"
+        except Exception:
+            pass
         temp_label = f"{day.temp_min}~{day.temp_max}°"
         draw.text((10, y), date_label, font=font_small, fill=(255, 255, 255))
         draw.text((90, y), day.text_day[:10], font=font_small, fill=(255, 255, 255))
