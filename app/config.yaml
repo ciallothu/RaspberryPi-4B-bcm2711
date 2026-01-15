@@ -1,30 +1,45 @@
 display:
-  width: 240
-  height: 320
+  w: 320
+  h: 240
+  width: 320
+  height: 240
   brightness: 80
   page_cycle_seconds: 10
-  fps_static: 1
+  fps_idle: 1
   fps_pet: 8
+  fps_video: 10
 
 network:
-  test_host: "1.1.1.1"
-  test_port: 53
+  connect_test_host: "1.1.1.1"
+  connect_test_port: 53
+  connect_timeout: 1.5
   refresh_seconds: 2
 
 qweather:
-  host: "YOUR_HOST.qweatherapi.com"
-  api_key: "0123456789ABCDEF"
+  host: "nk3h2qgxkp.yun.qweatherapi.com"
+  api_key: "4DE2JHR6H3"
   lang: "zh"
   unit: "m"
-  location_text: "Beijing"
-  refresh_seconds: 900
   timeout_seconds: 2.0
+  refresh_seconds: 900
+  lookup:
+    location_text: "Beijing"
+    location_id: "101010100"
+    range: "cn"
+    number: 1
 
-ticker:
-  speed_px_per_s: 40
+shwg:
+  api_key: "fT7UdsZE1wNi2qGGp747zHJGmN"
+  quote_type: 5
+  quote_refresh_seconds: 900
+  lunar_refresh_seconds: 3600
 
-reminder:
-  fish_times:
-    - "10:30"
-    - "15:30"
-    - "21:00"
+ui:
+  ticker_height: 24
+  ticker_speed_px_per_s: 40
+
+paths:
+  state_dir: "~/.cache/deskpet-panel"
+  geo_cache: "qweather_geo.json"
+  weather_cache: "weather_now.json"
+  forecast_cache: "weather_7d.json"
