@@ -9,6 +9,10 @@ def load_font(size: int) -> ImageFont.ImageFont:
         os.path.join(os.path.dirname(base), "drivers", "fonts", "arialbd.ttf"),
         os.path.join(base, "assets", "fonts", "arialbd.ttf"),
         os.path.join(os.path.dirname(base), "fonts", "arialbd.ttf"),
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+        "/usr/share/fonts/truetype/arphic/ukai.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]

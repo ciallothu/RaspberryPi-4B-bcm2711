@@ -62,9 +62,9 @@ def render_weather_page(snap: Snapshot, ticker: Ticker, display_cfg: dict) -> Im
     img = Image.new("RGB", (w, h), (0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    font_small = load_font(14)
-    font_mid = load_font(22)
-    font_big = load_font(48)
+    font_small = load_font(18)
+    font_mid = load_font(26)
+    font_big = load_font(60)
 
     status_bar(draw, snap, font_small, display_cfg)
     title = "WEATHER"
@@ -79,8 +79,6 @@ def render_weather_page(snap: Snapshot, ticker: Ticker, display_cfg: dict) -> Im
         if snap.weather.now.stale:
             meta = "STALE " + meta
         draw.text((10, 210), meta[:32], font=font_small, fill=(255, 255, 255))
-        if snap.weather.now.err:
-            draw.text((10, 230), f"err:{snap.weather.now.err}"[:32], font=font_small, fill=(255, 255, 255))
     else:
         draw.text((10, 120), "Weather unavailable", font=font_mid, fill=(255, 255, 255))
         if snap.weather.now.err:
@@ -191,15 +189,15 @@ def render_weekly_weather_page(snap: Snapshot, ticker: Ticker, display_cfg: dict
     img = Image.new("RGB", (w, h), (0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    font_small = load_font(14)
-    font_mid = load_font(20)
+    font_small = load_font(18)
+    font_mid = load_font(24)
     status_bar(draw, snap, font_small, display_cfg)
 
     draw.text((10, 36), "7-DAY FORECAST", font=font_mid, fill=(255, 255, 255))
 
     daily = snap.weather.daily[:7]
     start_y = 70
-    row_h = 24
+    row_h = 28
     weekday_map = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
     for idx, day in enumerate(daily):
         y = start_y + idx * row_h
